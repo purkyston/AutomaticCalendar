@@ -15,7 +15,8 @@ TESTID = 'mi584oior0veus2f79lolaht54@group.calendar.google.com'
 ALGOID = 'o3alvrvraeam3vd43kqent15p4@group.calendar.google.com'
 CURRENTID = ALGOID
 
-def CodeforcesTime2ISO(str_time, str_length):
+
+def codeforces_time2iso(str_time, str_length):
   datetime_start = datetime.strptime(str_time, '%b/%d/%Y %H:%M')
   datetime_length = datetime.strptime(str_length, '%H:%M')
   datetime_base = datetime.strptime('00:00', '%H:%M')
@@ -23,7 +24,8 @@ def CodeforcesTime2ISO(str_time, str_length):
   datetime_end = datetime_start + timedelta_length
   return datetime_start.isoformat()+'+03:00', datetime_end.isoformat() + '+03:00'
 
-def AtcoderTime2ISO(str_time, str_length):
+
+def atcoder_time2iso(str_time, str_length):
     datetime_start = datetime.strptime(str_time, '%Y/%m/%d %H:%M')
     datetime_length = datetime.strptime(str_length, '%H:%M')
     datetime_base = datetime.strptime('00:00', '%H:%M')
@@ -31,7 +33,8 @@ def AtcoderTime2ISO(str_time, str_length):
     datetime_end = datetime_start + timedelta_length
     return datetime_start.isoformat()+'+09:00', datetime_end.isoformat() + '+09:00'
 
-def ParseCodeforcesEvents(text):
+
+def parse_codeforces_events(text):
   soup = BeautifulSoup(text, 'lxml')
   first_table = soup.find('table')
   contests = first_table.find_all('tr')[1:]
@@ -42,7 +45,8 @@ def ParseCodeforcesEvents(text):
     contest_list.append((name, start, length))
   return contest_list
 
-def ParseAtcoderEvents(text):
+
+def parse_atcoder_events(text):
   soup = BeautifulSoup(text, 'lxml')
   first_table = soup.find_all('table', class_='table')[1]
   contests = first_table.find('tbody').find_all('tr')
@@ -62,7 +66,7 @@ class AddEvents(object):
     self.parse_event = parse_event
     self.event_set = event_list
 
-  def addEvents(self, service, calendarId):
+  def add_events(self, service, calendar_id):
     event = {
       'summary': 'None',
       'description': self.website,
@@ -92,11 +96,11 @@ class AddEvents(object):
         event['summary'] = name
         event['start']['dateTime'] = str_start
         event['end']['dateTime'] = str_end
-        insert_result = service.events.insert(calendarId=calendarId, body=event).execute()
+        insert_result = service.events.insert(calendarId=calendar_id, body=event).execute()
         print(insert_result)
 
 
-def FetchAllEvents(service, calendarId):
+def fetch_all_events(service, calendar_id):
   """Fetching all events of the calenderId
 
   :param service:
@@ -106,7 +110,7 @@ def FetchAllEvents(service, calendarId):
   page_token = None
   event_list = []
   while True:
-    events = service.events().list(calendarId=calendarId, pageToken=page_token, timeMin=now,
+    events = service.events().list(calendarId=calendar_id, pageToken=page_token, timeMin=now,
                                    singleEvents=True, orderBy='startTime').execute()
     event_list.extend(events.get('items', []))
     page_token = events.get('nextPageToken')
@@ -128,14 +132,14 @@ def main():
   # Call the Calendar API
   now = datetime.utcnow().isoformat() + 'Z' # 'Z' indicates UTC time
 
-  calendar_event_list = FetchAllEvents(service, CURRENTID)
+  calendar_event_list = fetch_all_events(service, CURRENTID)
 
   summary_list = set([event.get('summary') for event in calendar_event_list])
 
-  AddEvents(url="http://codeforces.com/contests", website="Codeforces", parse_event=ParseCodeforcesEvents,
-            time2iso=CodeforcesTime2ISO, event_list=summary_list).addEvents(service, CURRENTID)
-  AddEvents(url="http://atcoder.jp/contest", website="AtCoder", parse_event=ParseAtcoderEvents,
-            time2iso=AtcoderTime2ISO, event_list=summary_list).addEvents(service, CURRENTID)
+  AddEvents(url="http://codeforces.com/contests", website="Codeforces", parse_event=parse_codeforces_events,
+            time2iso=codeforces_time2iso, event_list=summary_list).add_events(service, CURRENTID)
+  AddEvents(url="http://atcoder.jp/contest", website="AtCoder", parse_event=parse_atcoder_events,
+            time2iso=atcoder_time2iso, event_list=summary_list).add_events(service, CURRENTID)
 
 
 if __name__ == '__main__':
