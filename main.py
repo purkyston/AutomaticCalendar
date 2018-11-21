@@ -36,6 +36,10 @@ def atcoder_time2iso(str_time, str_length):
         datetime_end.isoformat() + '+09:00'
 
 
+def hackerrank_time2iso(str_start, str_end):
+    return str_start, str_end
+
+
 def parse_codeforces_events(text):
     soup = BeautifulSoup(text, 'lxml')
     first_table = soup.find('table')
@@ -61,6 +65,22 @@ def parse_atcoder_events(text):
             element.get_text().strip()
             for element in contest.find_all('td')[:]][:4]
         contest_list.append((name, start, length))
+    return contest_list
+
+
+def parse_hackerrank_events(text):
+    soup = BeautifulSoup(text, 'lxml')
+    contests = soup.find(class_="contests-active").find_all(class_="contest-tab-expander")
+
+    contest_list = []
+    for contest in contests:
+        name = contest.find(class_="contest-name").get_text()
+        start_element = contest.find(class_="fnt-sz-small txt-navy")
+        if start_element.span is not None:
+            meta_dict = {}
+            for meta in start_element.span.span.find_all():
+                meta_dict[meta['itemprop']] = meta['content']
+            contest_list.append((name, meta_dict['startDate'], meta_dict['endDate']))
     return contest_list
 
 
@@ -103,7 +123,7 @@ class AddEvents(object):
                 event['summary'] = name
                 event['start']['dateTime'] = str_start
                 event['end']['dateTime'] = str_end
-                insert_result = service.events.insert(
+                insert_result = service.events().insert(
                     calendarId=calendar_id, body=event).execute()
                 print(insert_result)
 
@@ -111,8 +131,7 @@ class AddEvents(object):
 def fetch_all_events(service, calendar_id):
     """Fetching all events of the calenderId
 
-    :param service:
-    :return:
+    :return: list [event0, event1, ..., ]
     """
     now = datetime.utcnow().isoformat() + 'Z'  # 'Z' indicates UTC time
     page_token = None
@@ -141,9 +160,6 @@ def main():
         creds = tools.run_flow(flow, store)
     service = build('calendar', 'v3', http=creds.authorize(Http()))
 
-    # Call the Calendar API
-    now = datetime.utcnow().isoformat() + 'Z'  # 'Z' indicates UTC time
-
     calendar_event_list = fetch_all_events(service, CURRENTID)
 
     summary_list = set([event.get('summary') for event in calendar_event_list])
@@ -157,6 +173,11 @@ def main():
               website="AtCoder",
               parse_event=parse_atcoder_events,
               time2iso=atcoder_time2iso,
+              event_list=summary_list).add_events(service, CURRENTID)
+    AddEvents(url="https://www.hackerrank.com/contests",
+              website="Hackerrank",
+              parse_event=parse_hackerrank_events,
+              time2iso=hackerrank_time2iso,
               event_list=summary_list).add_events(service, CURRENTID)
 
 
