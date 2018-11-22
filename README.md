@@ -5,7 +5,7 @@ This project aims to add algorithm competitions to your Google Calendar automati
 
 - [x] Codeforces
 - [ ] Topcoder
-- [ ] Codechef
+- [x] Codechef
 - [x] Hackerrank
 - [x] AtCoder
 

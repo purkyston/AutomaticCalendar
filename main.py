@@ -40,6 +40,10 @@ def hackerrank_time2iso(str_start, str_end):
     return str_start, str_end
 
 
+def codechef_time2iso(str_start, str_end):
+    return str_start, str_end
+
+
 def parse_codeforces_events(text):
     soup = BeautifulSoup(text, 'lxml')
     first_table = soup.find('table')
@@ -84,6 +88,20 @@ def parse_hackerrank_events(text):
     return contest_list
 
 
+def parse_codechef_events(text):
+    soup = BeautifulSoup(text, 'lxml')
+    contests = soup.find_all(class_="dataTable")[1]
+
+    contest_list = []
+    for contest in contests.tbody.find_all("tr"):
+        elements = contest.find_all("td")
+        name = elements[1].get_text()
+        str_start = elements[2]['data-starttime']
+        str_end = elements[3]['data-endtime']
+        contest_list.append((name, str_start, str_end))
+    return contest_list
+
+
 class AddEvents(object):
 
     def __init__(self, url, website, parse_event, time2iso, event_list):
@@ -109,9 +127,16 @@ class AddEvents(object):
                     {'method': 'popup', 'minutes': 10},
                 ],
             },
+            'source': {
+                'title': self.website,
+                'url': self.url,
+            },
         }
 
-        html_result = requests.get(self.url)
+        headers = {
+            "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.13; rv:55.0) Gecko/20100101 Firefox/55.0",
+        }
+        html_result = requests.get(self.url, headers=headers)
         contest_list = self.parse_event(html_result.text)
 
         for contest in contest_list:
@@ -178,6 +203,11 @@ def main():
               website="Hackerrank",
               parse_event=parse_hackerrank_events,
               time2iso=hackerrank_time2iso,
+              event_list=summary_list).add_events(service, CURRENTID)
+    AddEvents(url="https://www.codechef.com/contests",
+              website="Codechef",
+              parse_event=parse_codechef_events,
+              time2iso=codechef_time2iso,
               event_list=summary_list).add_events(service, CURRENTID)
 
 
