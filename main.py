@@ -175,11 +175,11 @@ def fetch_all_events(service, calendar_id):
     return event_list
 
 
-def main():
+def main(token_path):
     # The file token.json stores the user's access and refresh tokens, and is
     # created automatically when the authorization flow completes for the first
     # time.
-    store = file.Storage('token.json')
+    store = file.Storage(token_path)
     creds = store.get()
     if not creds or creds.invalid:
         flow = client.flow_from_clientsecrets('credentials.json', SCOPES)
@@ -216,4 +216,4 @@ if __name__ == '__main__':
     if len(sys.argv) != 2:
         print("Usage: python path/to/main.py path/to/token.json")
         sys.exit(1)
-    main()
+    main(sys.argv[1])
