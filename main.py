@@ -7,6 +7,7 @@ from oauth2client import file, client, tools
 from bs4 import BeautifulSoup
 from datetime import datetime
 import requests
+import sys
 
 # If modifying these scopes, delete the file token.json.
 SCOPES = 'https://www.googleapis.com/auth/calendar'
@@ -212,4 +213,7 @@ def main():
 
 
 if __name__ == '__main__':
+    if len(sys.argv) != 2:
+        print("Usage: python path/to/main.py path/to/token.json")
+        sys.exit(1)
     main()
