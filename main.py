@@ -1,13 +1,14 @@
-#!/bin/python
+#!/bin/python3
+# coding=utf-8
 
 from __future__ import print_function
+from datetime import datetime
+import sys
 from googleapiclient.discovery import build
 from httplib2 import Http
 from oauth2client import file, client, tools
 from bs4 import BeautifulSoup
-from datetime import datetime
 import requests
-import sys
 
 # If modifying these scopes, delete the file token.json.
 SCOPES = 'https://www.googleapis.com/auth/calendar'
@@ -18,6 +19,7 @@ CURRENTID = ALGOID
 
 
 def codeforces_time2iso(str_time, str_length):
+    """convert codeforces time to ISO."""
     datetime_start = datetime.strptime(str_time, '%b/%d/%Y %H:%M')
     datetime_length = datetime.strptime(str_length, '%H:%M')
     datetime_base = datetime.strptime('00:00', '%H:%M')
@@ -28,6 +30,7 @@ def codeforces_time2iso(str_time, str_length):
 
 
 def atcoder_time2iso(str_time, str_length):
+    """convert atcode time to ISO."""
     datetime_start = datetime.strptime(str_time, '%Y/%m/%d %H:%M')
     datetime_length = datetime.strptime(str_length, '%H:%M')
     datetime_base = datetime.strptime('00:00', '%H:%M')
@@ -38,14 +41,17 @@ def atcoder_time2iso(str_time, str_length):
 
 
 def hackerrank_time2iso(str_start, str_end):
+    """convert hackerrank time to ISO."""
     return str_start, str_end
 
 
 def codechef_time2iso(str_start, str_end):
+    """Convert codechef time to ISO."""
     return str_start, str_end
 
 
 def parse_codeforces_events(text):
+    """Extract codeforces contests."""
     soup = BeautifulSoup(text, 'lxml')
     first_table = soup.find('table')
     contests = first_table.find_all('tr')[1:]
@@ -60,6 +66,7 @@ def parse_codeforces_events(text):
 
 
 def parse_atcoder_events(text):
+    """Extract  atcode contests."""
     soup = BeautifulSoup(text, 'lxml')
     first_table = soup.find_all('table', class_='table')[1]
     contests = first_table.find('tbody').find_all('tr')
@@ -74,6 +81,7 @@ def parse_atcoder_events(text):
 
 
 def parse_hackerrank_events(text):
+    """Extract hackerrank contests."""
     soup = BeautifulSoup(text, 'lxml')
     contests = soup.find(class_="contests-active").find_all(class_="contest-tab-expander")
 
@@ -90,6 +98,7 @@ def parse_hackerrank_events(text):
 
 
 def parse_codechef_events(text):
+    """Extract codechef contests."""
     soup = BeautifulSoup(text, 'lxml')
     contests = soup.find_all(class_="dataTable")[1]
 
@@ -104,6 +113,7 @@ def parse_codechef_events(text):
 
 
 class AddEvents(object):
+    """Add contests to Google Calendar."""
 
     def __init__(self, url, website, parse_event, time2iso, event_list):
         self.url = url
@@ -113,6 +123,7 @@ class AddEvents(object):
         self.event_set = event_list
 
     def add_events(self, service, calendar_id):
+        """Add contests to Calendar."""
         event = {
             'summary': 'None',
             'description': self.website,
@@ -135,16 +146,23 @@ class AddEvents(object):
         }
 
         headers = {
-            "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.13; rv:55.0) Gecko/20100101 Firefox/55.0",
+            "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.13; rv:55.0) "
+                          "Gecko/20100101 Firefox/55.0",
         }
         html_result = requests.get(self.url, headers=headers)
         contest_list = self.parse_event(html_result.text)
 
+        now = datetime.fromisoformat(datetime.utcnow().isoformat() + '+00:00')
+
         for contest in contest_list:
             name, start, length = contest
             str_start, str_end = self.time2iso(start, length)
+            # ensure the start time will be after the current time
+            if datetime.fromisoformat(str_start) < now:
+                print('parsing the past contests: ', name)
+                continue
             if name in self.event_set:
-                print(name, 'has been added')
+                print(name, ' has been added')
             else:
                 event['summary'] = name
                 event['start']['dateTime'] = str_start
@@ -176,6 +194,8 @@ def fetch_all_events(service, calendar_id):
 
 
 def main(token_path):
+    """Add online contests to Google Calendar."""
+
     # The file token.json stores the user's access and refresh tokens, and is
     # created automatically when the authorization flow completes for the first
     # time.
