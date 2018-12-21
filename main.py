@@ -68,7 +68,11 @@ def parse_codeforces_events(text):
 def parse_atcoder_events(text):
     """Extract  atcode contests."""
     soup = BeautifulSoup(text, 'lxml')
-    first_table = soup.find_all('table', class_='table')[1]
+    tables = soup.find_all('table', class_='table')
+    if len(tables) >= 2:
+        first_table = tables[1];
+    else:
+        return []
     contests = first_table.find('tbody').find_all('tr')
 
     contest_list = []
