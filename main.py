@@ -21,7 +21,11 @@ CURRENTID = ALGOID
 def codeforces_time2iso(str_time, str_length):
     """convert codeforces time to ISO."""
     datetime_start = datetime.strptime(str_time, '%b/%d/%Y %H:%M')
-    datetime_length = datetime.strptime(str_length, '%H:%M')
+    try:
+      datetime_length = datetime.strptime(str_length, '%H:%M')
+    except ValueError:
+      datetime_length = datetime.strptime("02:00", "%H:%M")
+      print ("Value error!")
     datetime_base = datetime.strptime('00:00', '%H:%M')
     timedelta_length = datetime_length - datetime_base
     datetime_end = datetime_start + timedelta_length
@@ -47,6 +51,10 @@ def hackerrank_time2iso(str_start, str_end):
 
 def codechef_time2iso(str_start, str_end):
     """Convert codechef time to ISO."""
+    if str_start[-1] == 'Z':
+      str_start = str_start[:-1] + '+00:00'
+    if str_end[-1] == 'Z':
+      str_end = str_end[:-1] + '+00:00'
     return str_start, str_end
 
 
