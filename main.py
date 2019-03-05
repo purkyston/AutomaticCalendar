@@ -46,11 +46,17 @@ def atcoder_time2iso(str_time, str_length):
 
 def hackerrank_time2iso(str_start, str_end):
     """convert hackerrank time to ISO."""
+    # parse the time end with 'Z' manually.
+    if str_start[-1] == 'Z':
+      str_start = str_start[:-1] + '+00:00'
+    if str_end[-1] == 'Z':
+      str_end = str_end[:-1] + '+00:00'
     return str_start, str_end
 
 
 def codechef_time2iso(str_start, str_end):
     """Convert codechef time to ISO."""
+    # parse the time end with 'Z' manually.
     if str_start[-1] == 'Z':
       str_start = str_start[:-1] + '+00:00'
     if str_end[-1] == 'Z':
