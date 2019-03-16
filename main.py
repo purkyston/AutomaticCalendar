@@ -35,13 +35,21 @@ def codeforces_time2iso(str_time, str_length):
 
 def atcoder_time2iso(str_time, str_length):
     """convert atcode time to ISO."""
-    datetime_start = datetime.strptime(str_time, '%Y/%m/%d %H:%M')
     datetime_length = datetime.strptime(str_length, '%H:%M')
     datetime_base = datetime.strptime('00:00', '%H:%M')
     timedelta_length = datetime_length - datetime_base
-    datetime_end = datetime_start + timedelta_length
-    return datetime_start.isoformat() + '+09:00', \
-        datetime_end.isoformat() + '+09:00'
+    try:
+        datetime_start = datetime.strptime(str_time, '%Y/%m/%d %H:%M')
+        datetime_end = datetime_start + timedelta_length
+        return datetime_start.isoformat() + '+09:00', \
+            datetime_end.isoformat() + '+09:00'
+    except ValueError:
+        str_time = str_time.replace(' ', 'T')
+        str_time = str_time[:-2] + ':00'
+        datetime_start = datetime.fromisoformat(str_time)
+        datetime_end = datetime_start + timedelta_length
+        return datetime_start.isoformat(), \
+            datetime_end.isoformat()
 
 
 def hackerrank_time2iso(str_start, str_end):
@@ -233,7 +241,7 @@ def main(token_path):
               parse_event=parse_codeforces_events,
               time2iso=codeforces_time2iso,
               event_list=summary_list).add_events(service, CURRENTID)
-    AddEvents(url="http://atcoder.jp/contest",
+    AddEvents(url="https://atcoder.jp/contests/",
               website="AtCoder",
               parse_event=parse_atcoder_events,
               time2iso=atcoder_time2iso,
